@@ -1,45 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Zeeshan's Website</title>
-  <link rel="stylesheet" href="styles.css">
+<title>Pothole Detection</title>
 </head>
 <body>
-  <!-- Header Section -->
-  <header>
-    <h1>Welcome to My Website</h1>
-    <nav>
-      <ul>
-        <li><a href="#home">Home</a></li>
-        <li><a href="#about">About</a></li>
-        <li><a href="#contact">Contact</a></li>
-      </ul>
-    </nav>
-  </header>
 
-  <!-- Main Content -->
-  <main>
-    <section id="home">
-      <h2>Home</h2>
-      <p>This is a simple homepage created with HTML and CSS.</p>
-    </section>
+<h2>Live Pothole Detection</h2>
 
-    <section id="about">
-      <h2>About</h2>
-      <p>Here you can write about yourself, your projects, or your interests.</p>
-    </section>
+<video id="video" autoplay playsinline></video>
+<canvas id="canvas" style="display:none;"></canvas>
+<img id="output">
 
-    <section id="contact">
-      <h2>Contact</h2>
-      <p>Email: <a href="mailto:example@email.com">example@email.com</a></p>
-    </section>
-  </main>
+<script>
+const video = document.getElementById("video");
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const output = document.getElementById("output");
 
-  <!-- Footer -->
-  <footer>
-    <p>&copy; 2026 Zeeshan. All rights reserved.</p>
-  </footer>
+const ws = new WebSocket("ws://YOUR_PC_IP:8000/ws");
+
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+})
+.catch(err => {
+    alert("Camera permission denied!");
+});
+
+video.addEventListener("play", () => {
+    setInterval(() => {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        const data = canvas.toDataURL("image/jpeg");
+        ws.send(data);
+    }, 100);
+});
+
+ws.onmessage = (event) => {
+    output.src = event.data;
+};
+</script>
+
 </body>
 </html>
